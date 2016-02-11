@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Abrar: please don't change this code, unless I'm in person with you. 
+#Abrar: please don't change this code, unless I'm in person with you.
 import roslib; roslib.load_manifest("neato_node")
 import rospy
 from math import sin,cos

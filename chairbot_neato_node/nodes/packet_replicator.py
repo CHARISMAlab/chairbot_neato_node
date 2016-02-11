@@ -2,107 +2,122 @@
 import roslib; roslib.load_manifest("neato_node");
 import rospy
 
-from what_is_my_name import chairbot_number
+from what_is_my_name import what_is_my_name
 from std_msgs.msg import Int8, String
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32
 from neato_driver.neato_driver import Botvac
 
-rospy.init_node('packet_tester')
+
+class PacketReplicatorNode:
+    '''
+    Replicates packets from the  requestMotion and requestStop packets
+    '''
+
+    def __init__(self):
+        #each chair will have their own topics
+        self.chairbot_number = what_is_my_name();
+        #topic where we put the replicated packet
+        self.chairMovement_topic_name = 'chairMovement' + self.chairbot_number
+        #topic where we get the request motion packet
+        self.requestMotion_topic_name = 'requestMotion' + self.chairbot_number
+        #topic where we get the request stop packet
+        self.requestStop_topic_name = 'requestStop' + self.chairbot_number
+        self.chairMovementTopic = rospy.Publisher(self.chairMovement_topic_name, Twist, queue_size=30);
 
 
-#TODO: make this whole file in a class just like twist_listener.py
 
-chairbot_number = chairbot_number()
-chairMovement_topic_name = 'chairMovement' + chairbot_number
-requestMotion_topic_name = 'requestMotion' + chairbot_number
-stopMotion_topic_name = 'requestStop' + chairbot_number
+        #empty twist packet to replicate which we will fill with the right motion
+        self.motion = None
+        self.packet = Twist()
 
-#publish to the topic for sending Twist messages which the neato node 
-#will use for actually moving
-chairMovementTopic = rospy.Publisher(chairMovement_topic_name, Twist, queue_size=30);
+        #these are the motions which will be performed when a given CONSTANT is in the packet
+        #this is what we actually replicate!
+        self.BACKWARD = {
+                      'linear': {'x': 150.0, 'y':0.0, 'z':0.0},
+                      'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
+                   }
 
-r = rospy.Rate(20) # WHY 20 ???
-
-motion = None
-packet = Twist()
-
-BACKWARD = { 
-              'linear': {'x': 150.0, 'y':0.0, 'z':0.0},
-              'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
-           }
-
-FORWARD = { 
-            'linear': {'x': -150.0, 'y':0.0, 'z':0.0},
-            'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
-         }
-LEFT = { 
-            'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
-            'angular': {'x': 0.0, 'y':0.0, 'z':50.0}
-}
-RIGHT = {
-            'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
-            'angular': {'x': 0.0, 'y':0.0, 'z':-50.0}
-}
-
-STOP_MOTION = { 
-    	  'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
-          'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
+        self.FORWARD = {
+                    'linear': {'x': -150.0, 'y':0.0, 'z':0.0},
+                    'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
+                 }
+        self.LEFT = {
+                    'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
+                    'angular': {'x': 0.0, 'y':0.0, 'z':50.0}
         }
-       
+        self.RIGHT = {
+                    'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
+                    'angular': {'x': 0.0, 'y':0.0, 'z':-50.0}
+        }
 
-MOTIONS = { 'BACKWARD' : BACKWARD, 
-            "FORWARD": FORWARD, 
-            'LEFT': LEFT, 
-            'RIGHT': RIGHT, 
-            'STOP' : STOP_MOTION
-           }
+        self.STOP_MOTION = {
+                  'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
+                  'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
+                }
 
-# print("We are going to move with ", BACKWARD);
+        #dict mapping the constants to the actual motion dictionaries
+        self.MOTIONS = { 'BACKWARD' : self.BACKWARD,
+                    "FORWARD": self.FORWARD,
+                    'LEFT': self.LEFT,
+                    'RIGHT': self.RIGHT,
+                    'STOP' : self.STOP_MOTION
+                   }
 
-STOP_FLAG = False
+        #this tracks whether we are told to stop or not
+        self.STOP_FLAG = False
 
-# takes the motion message request and sets flags OR motion variables based on it.
-def motion_callback(msg):
-    global motion, STOP_FLAG
-    global MOTIONS
-    print "We got a msg", msg.data
+        #requestMotion topic which receives MOTION commands from the frontends
+        rospy.Subscriber(self.requestMotion_topic_name, String, self.motion_callback, queue_size=10)
+        #stopMotion topic which receives STOP commands from the frontend
+        rospy.Subscriber(self.requestStop_topic_name, String, self.motion_callback, queue_size=10)
+        #initialize a ros node
+        rospy.init_node('packet_replicator_' + self.chairbot_number)
 
-    msg = msg.data #just unrwap the command 
+    def motion_callback(self, msg):
+        '''
+        takes the motion message request and sets flags OR motion variables based on it
+        '''
+        print "We got a msg", msg.data
 
-    if msg == 'STOP': # we were given the STOP command
-        print "We got a STOP"
-        STOP_FLAG = True
-    else: # we were given a MOTION command
-        STOP_FLAG = False
-    
-    motion = MOTIONS[msg]
-    print("The motion is gonna be ", motion)
+        msg = msg.data #just unrwap the command
 
-#requestMotion topic which receives MOTIONs, STOPs and PAUSEs
-rospy.Subscriber(requestMotion_topic_name, String, motion_callback, queue_size=10)
-rospy.Subscriber(stopMotion_topic_name, String, motion_callback, queue_size=10)
+        if msg == 'STOP': # we were given the STOP command
+            rospy.loginfo("We got a STOP")
+            self.STOP_FLAG = True
+        else: # we were given a MOTION command
+            self.STOP_FLAG = False
 
-while not rospy.is_shutdown():
-    if motion is None:
-        #print "Waiting for motion"
-        continue; #try again!
+        self.motion = self.MOTIONS[msg]
+        print("The motion is gonna be ", self.motion)
 
-    if STOP_FLAG is True:
-        #print "Stopping"
-        pass;
-    else:
-        #print "Moving"
-        pass;
+    def spin(self):
+        self.r = rospy.Rate(20) # WHY 20 ???
+        while not rospy.is_shutdown():
+            if self.motion is None:
+                #print "Waiting for motion"
+                continue; #try again!
 
-    print "Replicating the packet"
-    print motion
+            if self.STOP_FLAG is True:
+                rospy.loginfo("Stopping")
+            else:
+                rospy.loginfo("Moving")
+                pass;
 
-    packet.linear.x = motion['linear']['x']
-    packet.linear.y = motion['linear']['y']
-    packet.linear.z = motion['linear']['z']
-    packet.angular.x = motion['angular']['x']
-    packet.angular.y = motion['angular']['y']
-    packet.angular.z = motion['angular']['z']
-    chairMovementTopic.publish(packet)
-    r.sleep()
+            rospy.loginfo("Replicating the packet")
+            rospy.loginfo(self.motion)
+            #populate the packet with the movememnt commands 
+            #for that motion which were set by the motion_callback
+
+            self.packet.linear.x = self.motion['linear']['x']
+            self.packet.linear.y = self.motion['linear']['y']
+            self.packet.linear.z = self.motion['linear']['z']
+            self.packet.angular.x = self.motion['angular']['x']
+            self.packet.angular.y = self.motion['angular']['y']
+            self.packet.angular.z = self.motion['angular']['z']
+            self.chairMovementTopic.publish(self.packet)
+            self.r.sleep()
+
+if __name__ == "__main__":
+    robot = PacketReplicatorNode()
+    robot.spin()
