@@ -1,11 +1,10 @@
 <launch>
 	<param name="use_sim_time" value="false"/>
- 
-  <node name="packet_replicator" pkg="chairbot_neato_node" type="packet_replicator.py" output="screen">
+	<!-- eg. packet_replicator_neato03 -->
+  <node name="$(eval 'packet_replicator_' + env('NEATO_NAME'))" pkg="chairbot_neato_node" type="packet_replicator.py" output="screen">
   </node>
-
-  <node name="neato03" pkg="chairbot_neato_node" 
-  type="neato_mover.py" output="screen">
+	<!-- eg. neato03 -->
+  <node name="$( env NEATO_NAME )" pkg="chairbot_neato_node" type="neato_mover.py" output="screen">
   </node>
 
 </launch>

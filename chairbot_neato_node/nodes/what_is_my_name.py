@@ -15,3 +15,7 @@ def what_is_my_number():
 
 def chairbot_number():
     return what_is_my_name()
+
+#print the value only if this is run as a script
+if __name__ == "__main__":
+    print(what_is_my_name())
