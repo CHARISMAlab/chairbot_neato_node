@@ -1,7 +1,0 @@
-<launch>
-	<param name="use_sim_time" value="false"/>
- 
-  <node name="packet_replicator" pkg="chairbot_neato_node" type="packet_replicator.py" output="screen">
-  </node>
-
-</launch>
