@@ -2,6 +2,7 @@
 import roslib; roslib.load_manifest("neato_node");
 import rospy
 
+from what_is_my_name import chairbot_number
 from std_msgs.msg import Int8, String
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32
@@ -9,20 +10,40 @@ from neato_driver.neato_driver import Botvac
 
 rospy.init_node('packet_tester')
 
+
+#TODO: make this whole file in a class just like twist_listener.py
+
+chairbot_number = chairbot_number()
+chairMovement_topic_name = 'chairMovement' + chairbot_number
+
+#publish to the topic for sending Twist messages which the neato node 
+#will use for actually moving
+chairMovement03 = rospy.Publisher(chairMovement_topic_name, Twist, queue_size=30);
+
 r = rospy.Rate(20) # WHY 20 ???
-twist03 = rospy.Publisher('/twist03', Twist, queue_size=30);
+
 motion = None
 packet = Twist()
 
 # NOTE: Why is BACKWARD a last but STOP_MOTION a dictionary?
 
-BACKWARD = { 'linear': {'x': 150.0, 'y':0.0, 'z':0.0},
+BACKWARD = { 
+              'linear': {'x': 150.0, 'y':0.0, 'z':0.0},
               'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
            }
 
-FORWARD = {}
-LEFT = {}
-RIGHT = {}
+FORWARD = { 
+            'linear': {'x': -150.0, 'y':0.0, 'z':0.0},
+            'angular': {'x': 0.0, 'y':0.0, 'z':0.0}
+         }
+LEFT = { 
+            'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
+            'angular': {'x': 0.0, 'y':0.0, 'z':50.0}
+}
+RIGHT = {
+            'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
+            'angular': {'x': 0.0, 'y':0.0, 'z':-50.0}
+}
 
 STOP_MOTION = { 
     	  'linear': {'x': 0.0, 'y':0.0, 'z':0.0},
@@ -64,13 +85,15 @@ rospy.Subscriber('/requestStop03', String, motion_callback, queue_size=10)
 
 while not rospy.is_shutdown():
     if motion is None:
-        print "Waiting for motion"
+        #print "Waiting for motion"
         continue; #try again!
 
     if STOP_FLAG is True:
-        print "Stopping"      
+        #print "Stopping"
+        pass;
     else:
-        print "Moving"
+        #print "Moving"
+        pass;
 
     print "Replicating the packet"
     print motion
@@ -81,5 +104,5 @@ while not rospy.is_shutdown():
     packet.angular.x = motion['angular']['x']
     packet.angular.y = motion['angular']['y']
     packet.angular.z = motion['angular']['z']
-    twist03.publish(packet)
+    chairMovement03.publish(packet)
     r.sleep()
