@@ -92,23 +92,23 @@ class NeatoNode:
         rospy.sleep(1)
 
     def fwd(self):
-        SPEED=100
-        self._robot.setMotors(-100,-100,SPEED)
+        SPEED=300
+        self._robot.setMotors(-300,-300,SPEED)
         rospy.sleep(1)
 
     def back(self):
-        SPEED=50
-        self._robot.setMotors(50,50,SPEED)
+        SPEED=200
+        self._robot.setMotors(200,200,SPEED)
         rospy.sleep(1) 
 
     def right(self):
-        SPEED=50
-        self._robot.setMotors(50,-50,SPEED)
+        SPEED=150
+        self._robot.setMotors(150,-150,SPEED)
         rospy.sleep(1)
 
     def left(self):
-        SPEED=50
-        self._robot.setMotors(-50,50,SPEED)
+        SPEED=150
+        self._robot.setMotors(-150,150,SPEED)
         rospy.sleep(1)
 
     def turnRight(self):
@@ -321,6 +321,9 @@ class NeatoNode:
         else:
             pub_led.publish(0)
 
+    def shutdown(self):
+        self._robot.setLDS("off")
+        self._robot.setTestMode("off")
 
 if __name__ == "__main__":    
     robot = NeatoNode()
@@ -330,5 +333,4 @@ if __name__ == "__main__":
         robot.spin()
         r.sleep()
     # shut down
-    self._robot.setLDS("off")
-    self._robot.setTestMode("off")
+    robot.shutdown()
