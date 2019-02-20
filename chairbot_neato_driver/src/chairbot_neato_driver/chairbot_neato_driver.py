@@ -57,7 +57,6 @@ class Botvac():
         self.state = {"LeftWheel_PositionInMM": 0, "RightWheel_PositionInMM": 0,"LSIDEBIT": 0,"RSIDEBIT": 0,"LFRONTBIT": 0,
                       "RFRONTBIT": 0,"BTN_SOFT_KEY": 0,"BTN_SCROLL_UP": 0,"BTN_START": 0,"BTN_BACK": 0,"BTN_SCROLL_DOWN": 0}
         self.stop_state = True
-        
         self.base_width = 248    # millimeters
         self.max_speed = 300     # millimeters/second
         self.crtl_z = chr(26)
@@ -120,8 +119,8 @@ class Botvac():
         for line in response.splitlines():
             vals = line.split(",")
             # vals[[0] angle, vals[1] range, vals[2] intensity, vals[3] error code
-            if len(vals) >= 2 and vals[0].isdigit() and vals[1].isdigit():
-                ranges.append(int(vals[1])/1000.0)
+            if len(vals) == 4 and vals[0].isdigit() and vals[1].isdigit():
+                ranges.append((float(vals[0]),float(vals[1])/1000.0,float(vals[2])))
         # sanity check
         if len(ranges) != 360:
             return []

@@ -12,24 +12,21 @@ from chairbot_neato_driver.chairbot_neato_driver import Botvac
 
 import socket
 import re
-global chairbot_number
+global neato_number
 hostname = socket.gethostname()
-chair_id = re.search(r"\d+(\.\d+)?", hostname)
-chairbot_number = chair_id.group(0)
+robot_id = re.search(r"\d+(\.\d+)?", hostname)
+neato_number = 'pi'+robot_id.group(0)
+
 
 class NeatoNode:
 
     def __init__(self):
         """ Start up connection to the Neato Robot. """
-        rospy.init_node('teleop'+chairbot_number, anonymous=True)
+        rospy.init_node('teleop'+neato_number, anonymous=True)
         self._port = rospy.get_param('~neato_port', "/dev/neato_port")
         rospy.loginfo("Using port: %s"%(self._port))
         self._robot = Botvac(self._port)
-        rospy.Subscriber("/joy"+chairbot_number, Joy, self.joy_handler, queue_size=10)
-        rospy.Subscriber("/cbon"+chairbot_number, Int8, self.cbon, queue_size=10)
-        rospy.Subscriber('/touches'+chairbot_number, Int8, self.touch_handler, queue_size=10)
-        rospy.Subscriber('/touches', Int8, self.global_touch_handler, queue_size=10)
-        self._global_touch = rospy.Publisher('/touches', Int8, queue_size=10)
+        rospy.Subscriber("/joy/"+neato_number, Joy, self.joy_handler, queue_size=10)
         self._joystick_axes = (-0.0, -0.0, 1.0, -0.0, -0.0, 1.0, -0.0, -0.0)
         self._joystick_buttons = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         self._speed = 0
@@ -40,16 +37,6 @@ class NeatoNode:
         self._last_y = 0
         self._x_ramp = 0
         self._y_ramp = 0
-        self._touch_number = -1
-        self._touch0 = False
-        self._touch1 = False
-        self._touch2 = False
-        self._touch3 = False
-        self._touch4 = False
-        self._touch5 = False
-        self._touch6 = False
-        self._touch7 = False
-        self._touch8 = False 
 
     # SQUARE
     def optiona(self):
@@ -92,28 +79,28 @@ class NeatoNode:
         rospy.sleep(1)
 
     def fwd(self):
-        SPEED=100
-        self._robot.setMotors(-100,-100,SPEED)
+        SPEED=300
+        self._robot.setMotors(-300,-300,SPEED)
         rospy.sleep(1)
 
     def back(self):
-        SPEED=50
-        self._robot.setMotors(50,50,SPEED)
+        SPEED=200
+        self._robot.setMotors(200,200,SPEED)
         rospy.sleep(1) 
 
     def right(self):
-        SPEED=50
-        self._robot.setMotors(50,-50,SPEED)
+        SPEED=150
+        self._robot.setMotors(150,-150,SPEED)
         rospy.sleep(1)
 
     def left(self):
-        SPEED=50
-        self._robot.setMotors(-50,50,SPEED)
+        SPEED=150
+        self._robot.setMotors(-150,150,SPEED)
         rospy.sleep(1)
 
     def turnRight(self):
         SPEED=100
-        self._robot.setMotors(220,-220,150)
+        self._robot.setMotors(220,-220,330)
         rospy.sleep(2.25)
 
     def turnLeft(self):
@@ -130,60 +117,6 @@ class NeatoNode:
     def joy_handler(self, ps):
         self._joystick_buttons =  ps.buttons
         self._joystick_axes = ps.axes
-
-    def cbon(self, on):
-        pub_led.publish(on.data)
-        print(on.data)
-        if on.data == 1:
-            self._touch6=True
-        elif on.data == 0:
-            self._touch6=False
-
-    def global_touch_handler(self, msg):
-        self._touch_number = msg.data
-        if self._touch_number == 0:
-            self._touch0 = True
-        if self._touch_number == 1:
-            self._touch1 = True
-        if self._touch_number == 2:
-            self._touch2 = True
-        if self._touch_number == 3:
-            self._touch3 = True
-        if self._touch_number == 4:
-            self._touch4 = True
-        if self._touch_number == 5:
-            self._touch5 = True
-        if self._touch_number == 7:
-            self._touch7 = not self._touch7
-            self._touch6 = self._touch7
-        if self._touch_number == 8:
-            self._touch8 = True
-        if self._touch_number == 12:
-            self._touch0 = False
-        if self._touch_number == 13:
-            self._touch1 = False
-        if self._touch_number == 14:
-            self._touch2 = False
-        if self._touch_number == 15:
-            self._touch3 = False
-        if self._touch_number == 16:
-            self._touch4 = False
-        if self._touch_number == 17:
-            self._touch5 = False
-        if self._touch_number == 19:
-            pass
-            # self._touch7 = False
-            # self._touch6 = False
-        if self._touch_number == 20:
-            self._touch8 = False
-
-    def touch_handler(self, msg):
-        self._touch_number = msg.data
-        if self._touch_number == 6:
-            self._touch6 = not self._touch6
-        
-        if self._touch6 or self._touch_number == 7:
-            self._global_touch.publish(self._touch_number)
 
     def spin(self):        
         Lft_t = self._joystick_axes[0]
@@ -241,24 +174,24 @@ class NeatoNode:
         elif (self._speed_ramp>330):
             self._speed_ramp=330
 
-        if (self._speed_set > 150):
+        if (self._speed_set > 330):
             if (0<x<10):
                 x=10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
             elif (-10<x<0):
                 x=-10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
 
             if (0<y<10):
                 y=10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
             elif (-10<y<0):
                 y=-10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
         else:
             if (0<x<5):
                 x=5
@@ -308,27 +241,16 @@ class NeatoNode:
         if sq == 1:
             self.optiond()
 
-        if (self._touch6):
-            pub_led.publish(1)
-            if (self._touch0 or self._touch1):
-                self.left()
-            if (self._touch2 or self._touch3):
-                self.right()
-            if (self._touch4):
-                self.back()
-            if (self._touch5):
-                self.fwd()
-        else:
-            pub_led.publish(0)
+    def shutdown(self):
+	    self._robot.setLDS("off")
+	    self._robot.setTestMode("off")
 
 
 if __name__ == "__main__":    
     robot = NeatoNode()
-    pub_led = rospy.Publisher("/led"+chairbot_number, Int8, queue_size=10)
     r = rospy.Rate(20)
     while not rospy.is_shutdown():
         robot.spin()
         r.sleep()
     # shut down
-    self._robot.setLDS("off")
-    self._robot.setTestMode("off")
+    robot.shutdown()
