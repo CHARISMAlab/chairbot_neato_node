@@ -29,7 +29,7 @@ class NeatoNode:
     
         rospy.loginfo("Object is successfully init")
         rospy.Subscriber(self.chairmovement_topic_name, Twist, self.twist_handler, queue_size=10)
-        rospy.Subscriber(self.cbon_topic_name, Int8, self.cbon03, queue_size=10)
+        rospy.Subscriber(self.cbon_topic_name, Int8, self.cbon, queue_size=10)
         self.latest_twist = Twist() # crete an empty twist packet
     
         self.SPEED = 150
@@ -89,7 +89,7 @@ class NeatoNode:
         print('twist handler')
         self.latest_twist = twist_msg
 
-    def cbon03(self, on):
+    def cbon(self, on):
         if on.data == 1:
             self.status = True
         elif on.data == 0:
