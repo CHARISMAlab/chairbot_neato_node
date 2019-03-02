@@ -92,28 +92,28 @@ class NeatoNode:
         rospy.sleep(1)
 
     def fwd(self):
-        SPEED=100
-        self._robot.setMotors(-100,-100,SPEED)
+        SPEED=300
+        self._robot.setMotors(-300,-300,SPEED)
         rospy.sleep(1)
 
     def back(self):
-        SPEED=50
-        self._robot.setMotors(50,50,SPEED)
+        SPEED=200
+        self._robot.setMotors(200,200,SPEED)
         rospy.sleep(1) 
 
     def right(self):
-        SPEED=50
-        self._robot.setMotors(50,-50,SPEED)
+        SPEED=150
+        self._robot.setMotors(150,-150,SPEED)
         rospy.sleep(1)
 
     def left(self):
-        SPEED=50
-        self._robot.setMotors(-50,50,SPEED)
+        SPEED=150
+        self._robot.setMotors(-150,150,SPEED)
         rospy.sleep(1)
 
     def turnRight(self):
         SPEED=100
-        self._robot.setMotors(220,-220,150)
+        self._robot.setMotors(220,-220,330)
         rospy.sleep(2.25)
 
     def turnLeft(self):
@@ -241,24 +241,24 @@ class NeatoNode:
         elif (self._speed_ramp>330):
             self._speed_ramp=330
 
-        if (self._speed_set > 150):
+        if (self._speed_set > 330):
             if (0<x<10):
                 x=10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
             elif (-10<x<0):
                 x=-10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
 
             if (0<y<10):
                 y=10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
             elif (-10<y<0):
                 y=-10
-                if (self._speed_ramp>150):
-                    self._speed_ramp = 150
+                if (self._speed_ramp>330):
+                    self._speed_ramp = 330
         else:
             if (0<x<5):
                 x=5
