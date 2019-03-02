@@ -15,17 +15,17 @@ rospy.init_node('packet_tester')
 
 chairbot_number = chairbot_number()
 chairMovement_topic_name = 'chairMovement' + chairbot_number
+requestMotion_topic_name = 'requestMotion' + chairbot_number
+stopMotion_topic_name = 'requestStop' + chairbot_number
 
 #publish to the topic for sending Twist messages which the neato node 
 #will use for actually moving
-chairMovement03 = rospy.Publisher(chairMovement_topic_name, Twist, queue_size=30);
+chairMovementTopic = rospy.Publisher(chairMovement_topic_name, Twist, queue_size=30);
 
 r = rospy.Rate(20) # WHY 20 ???
 
 motion = None
 packet = Twist()
-
-# NOTE: Why is BACKWARD a last but STOP_MOTION a dictionary?
 
 BACKWARD = { 
               'linear': {'x': 150.0, 'y':0.0, 'z':0.0},
@@ -80,8 +80,8 @@ def motion_callback(msg):
     print("The motion is gonna be ", motion)
 
 #requestMotion topic which receives MOTIONs, STOPs and PAUSEs
-rospy.Subscriber('/requestMotion03', String, motion_callback, queue_size=10)
-rospy.Subscriber('/requestStop03', String, motion_callback, queue_size=10)
+rospy.Subscriber(requestMotion_topic_name, String, motion_callback, queue_size=10)
+rospy.Subscriber(stopMotion_topic_name, String, motion_callback, queue_size=10)
 
 while not rospy.is_shutdown():
     if motion is None:
