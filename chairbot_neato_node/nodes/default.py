@@ -321,6 +321,10 @@ class NeatoNode:
         else:
             pub_led.publish(0)
 
+    def shutdown(self):
+	    self._robot.setLDS("off")
+	    self._robot.setTestMode("off")
+
 
 if __name__ == "__main__":    
     robot = NeatoNode()
@@ -330,5 +334,4 @@ if __name__ == "__main__":
         robot.spin()
         r.sleep()
     # shut down
-    self._robot.setLDS("off")
-    self._robot.setTestMode("off")
+    robot.shutdown()
