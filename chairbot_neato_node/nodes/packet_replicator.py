@@ -104,5 +104,5 @@ while not rospy.is_shutdown():
     packet.angular.x = motion['angular']['x']
     packet.angular.y = motion['angular']['y']
     packet.angular.z = motion['angular']['z']
-    chairMovement03.publish(packet)
+    chairMovementTopic.publish(packet)
     r.sleep()
