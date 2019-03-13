@@ -2,6 +2,7 @@
 
 import roslib; roslib.load_manifest("chairbot_neato_node")
 import rospy, time
+from subprocess import check_output
 
 from math import sin,cos
 from geometry_msgs.msg import Twist
@@ -26,7 +27,7 @@ class NeatoNode:
         rospy.loginfo("Using port: %s"%(self._port))
         self._robot = Botvac(self._port)
         rospy.Subscriber("/joy"+chairbot_number, Joy, self.joy_handler, queue_size=10)
-  
+
         self._joystick_axes = (-0.0, -0.0, 1.0, -0.0, -0.0, 1.0, -0.0, -0.0)
         self._joystick_buttons = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         self._speed = 0
@@ -38,8 +39,11 @@ class NeatoNode:
         self._x_ramp = 0
         self._y_ramp = 0
 
-	# ADD SOMETHING THAT READS LAST LINE FROM TEXT FILES AND SAVES AS POSITION
-
+        # FIDUCIAL MARKER variables
+        self.fiducial_marker_file_path = '/home/charisma/processing-3.5.3';
+        self.fiducial_marker_file_name = 'output1.txt'
+        self.fiducial_marker_data = {'time':None,'x':None,'y':None,'angle':None};
+        self.fiducial_marker_file=None;
 
     # SQUARE
     def optiona(self):
@@ -123,7 +127,27 @@ class NeatoNode:
 
 
 
-    def spin(self):        
+    def spin(self):
+        #if the fiducial_marker_file exists, open it
+        try:
+          #get the filename
+          self.fiducial_marker_file_name =self.fiducial_marker_file_path+self.fiducial_marker_file_name
+          #get the last line from the file by running tail
+          string = subprocess.check_output(['tail','-n1','/home/charisma/processing-3.5.3/output1.txt'])
+          #remove line-endings from that last line
+          string = string.splitlines()[0]
+          #unpack the data in variables
+          data = string.split(',')
+          #sample line: 42881,3.0,3.0,3.0
+          self.fiducial_marker_data['time'] = float(data[0])
+          self.fiducial_marker_data['x'] = float(data[1])
+          self.fiducial_marker_data['y'] = float(data[2])
+          self.fiducial_marker_data['angle'] = float(data[3])
+          print("Hey I read %s", string)
+          print("Hey we got ", self.fiducial_marker_data)
+        except IOError:
+          print("Fidcuial marker file " + self.fiducial_marker_file_name + "cannot be opened")
+
         Lft_t = self._joystick_axes[0]
         Lft_d = self._joystick_axes[1]
         Rgh_t = self._joystick_axes[3]
