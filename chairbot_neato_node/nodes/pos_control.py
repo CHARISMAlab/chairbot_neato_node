@@ -4,7 +4,7 @@ import roslib; roslib.load_manifest("chairbot_neato_node")
 import rospy, time
 from subprocess import check_output
 
-from math import sin,cos
+from math import sin,cos,atan2
 from geometry_msgs.msg import Twist
 from std_msgs.msg import UInt16
 from sensor_msgs.msg import Joy
@@ -40,13 +40,13 @@ class NeatoNode:
         self._y_ramp = 0
 
         # FIDUCIAL MARKER variables
-        self.fiducial_marker_file_path = '/home/charisma/processing-3.5.3';
+        self.fiducial_marker_file_path = '/home/charisma/processing-3.5.3'
         self.fiducial_marker_file_name = 'output1.txt'
-        self.fiducial_marker_data = {'time':None,'x':None,'y':None,'angle':None};
-        self.fiducial_marker_file=None;
+        self.fiducial_marker_data = {'time':None,'x':None,'y':None,'angle':None}
+        self.fiducial_marker_file=None
 
     # SQUARE
-    def optiona(self):
+    def pos_con(self):
         SPEED = 125
 
         self._robot.setMotors(-420,420,SPEED)
@@ -54,31 +54,6 @@ class NeatoNode:
 
         self._robot.setMotors(50,50,SPEED)
         rospy.sleep(1)
-
-    # TRIANGLE
-    def optionb(self):  
-        SPEED=100
-        self._robot.setMotors(-100,-100,SPEED)
-        rospy.sleep(1)
-        self._robot.setMotors(100,100,SPEED)
-        rospy.sleep(1)
-
-    # CIRCLE
-    def optionc(self):  
-        SPEED=200
-        self._robot.setMotors(-100,-100,SPEED/2)
-        rospy.sleep(1)
-        self._robot.setMotors(200,200,SPEED*(1.5))
-        rospy.sleep(1)
-
-    # X
-    def optiond(self):  
-        SPEED=200
-        for _ in range(2):
-            self._robot.setMotors(-100,-100,SPEED)
-            rospy.sleep(1)
-            self._robot.setMotors(100,100,SPEED)
-            rospy.sleep(1)
 
     def fwdFast(self):
         SPEED=175
@@ -128,26 +103,6 @@ class NeatoNode:
 
 
     def spin(self):
-        #if the fiducial_marker_file exists, open it
-        try:
-          #get the filename
-          self.fiducial_marker_file_name =self.fiducial_marker_file_path+self.fiducial_marker_file_name
-          #get the last line from the file by running tail
-          string = subprocess.check_output(['tail','-n1','/home/charisma/processing-3.5.3/output1.txt'])
-          #remove line-endings from that last line
-          string = string.splitlines()[0]
-          #unpack the data in variables
-          data = string.split(',')
-          #sample line: 42881,3.0,3.0,3.0
-          self.fiducial_marker_data['time'] = float(data[0])
-          self.fiducial_marker_data['x'] = float(data[1])
-          self.fiducial_marker_data['y'] = float(data[2])
-          self.fiducial_marker_data['angle'] = float(data[3])
-          print("Hey I read %s", string)
-          print("Hey we got ", self.fiducial_marker_data)
-        except IOError:
-          print("Fidcuial marker file " + self.fiducial_marker_file_name + "cannot be opened")
-
         Lft_t = self._joystick_axes[0]
         Lft_d = self._joystick_axes[1]
         Rgh_t = self._joystick_axes[3]
@@ -192,6 +147,64 @@ class NeatoNode:
         y=int(y)
 
         speeddif = abs(self._speed_ramp - self._speed_set)
+
+        #if the fiducial_marker_file exists, open it
+        try:
+          #get the filename
+          self.fiducial_marker_file_name =self.fiducial_marker_file_path+self.fiducial_marker_file_name
+          #get the last line from the file by running tail
+          string = subprocess.check_output(['tail','-n1','/home/charisma/processing-3.5.3/output1.txt'])
+          #remove line-endings from that last line
+          string = string.splitlines()[0]
+          #unpack the data in variables
+          data = string.split(',')
+          #sample line: 42881,3.0,3.0,3.0
+          self.fiducial_marker_data['time'] = float(data[0])
+          self.fiducial_marker_data['x'] = float(data[1])
+          self.fiducial_marker_data['y'] = float(data[2])
+          self.fiducial_marker_data['angle'] = float(data[3])
+          print("Hey I read %s", string)
+          print("Hey we got ", self.fiducial_marker_data)
+        except IOError:
+          print("Fidcuial marker file " + self.fiducial_marker_file_name + "cannot be opened")
+
+
+        if (tr == 1) or (ci == 1) or (xx == 1) or (sq == 1):
+            x_desired = 1.0
+            y_desired = 1.0
+            
+
+            x_curr = self.fiducial_marker_data['x']
+            y_curr = self.fiducial_marker_data['y']
+            ang_curr = self.fiducial_marker_data['angle']
+
+            ang_desired = atan2(y_desired-y_curr,x_desired-x_curr)
+
+            ang_diff = abs(ang_desired-ang_curr)
+            x_diff = abs(x_desired-x_curr)
+            y_diff = abs(y_desired-y_curr)
+
+            while ang_diff > 0.1:
+                SPEED=100
+                self._robot.setMotors(220,-220,150)
+                rospy.sleep(0.1)
+
+            while (x_diff > 0.1) or (y_diff > 0.1):
+                SPEED=100
+                self._robot.setMotors(-100,-100,SPEED)
+                rospy.sleep(0.1)
+                if ang_diff > 0.1:
+                    SPEED=0
+                    self._robot.setMotors(-100,-100,SPEED)
+                    rospy.sleep(0.5)
+                    while ang_diff > 0.1:
+                        SPEED=100
+                        self._robot.setMotors(220,-220,150)
+                        rospy.sleep(0.1)
+                
+
+
+
 
         if (self._speed_ramp<self._speed_set):
             self._speed_ramp += (speeddif/20)
@@ -261,14 +274,7 @@ class NeatoNode:
         self._robot.setMotors(self._x_ramp, self._y_ramp, self._speed_ramp)
         self._robot.flushing()
 
-        if tr == 1:
-            self.optiona()
-        if ci == 1:
-            self.optionb()
-        if xx == 1:
-            self.optionc()
-        if sq == 1:
-            self.optiond()
+
 
 
 
