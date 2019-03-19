@@ -2,6 +2,7 @@
 
 import roslib; roslib.load_manifest("chairbot_neato_node")
 import rospy, time
+from pyrosbag import BagPlayer
 
 from math import sin,cos
 from geometry_msgs.msg import Twist
@@ -50,11 +51,8 @@ class NeatoNode:
 
     # TRIANGLE
     def optionb(self):  
-        SPEED=100
-        self._robot.setMotors(-100,-100,SPEED)
-        rospy.sleep(1)
-        self._robot.setMotors(100,100,SPEED)
-        rospy.sleep(1)
+	with BagPlayer("../bags/straight_forward.bag" ) as straight_forward:
+	    straight_forward.play()
 
     # CIRCLE
     def optionc(self):  
