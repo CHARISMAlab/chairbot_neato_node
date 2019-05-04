@@ -27,10 +27,11 @@ class NeatoNode:
         self._port = rospy.get_param('~neato_port', "/dev/neato_port")
         rospy.loginfo("Using port: %s"%(self._port))
         self._robot = Botvac(self._port)
+	print("Your joystick topic is " + "/joy/"+neato_number);
         rospy.Subscriber("/joy/"+neato_number, Joy, self.joy_handler, queue_size=10)
         self._joystick_axes = (-0.0, -0.0, 1.0, -0.0, -0.0, 1.0, -0.0, -0.0)
         self._joystick_buttons = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        self._speed = 0
+        self._speed = 175 #Default speed for all motions including the pre-programmed bag motions 
         self._distance = 20
         self._speed_set = 0
         self._speed_ramp = 0
