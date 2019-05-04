@@ -39,37 +39,25 @@ class NeatoNode:
         self._x_ramp = 0
         self._y_ramp = 0
 
-    # SQUARE
+    # SQUARE == Indirect Back
     def optiona(self):
-        SPEED = 125
+	with BagPlayer("/home/charismapi01/catkin_ws/src/chairbot_neato_node/chairbot_neato_node/bags/indirect_back.bag" ) as indirect_back:
+	    indirect_back.play()
 
-        self._robot.setMotors(-420,420,SPEED)
-        rospy.sleep(3.5)
-
-        self._robot.setMotors(50,50,SPEED)
-        rospy.sleep(1)
-
-    # TRIANGLE
+    # TRIANGLE == Straight Forwards
     def optionb(self):  
-	with BagPlayer("../bags/straight_forward.bag" ) as straight_forward:
+	with BagPlayer("/home/charismapi01/catkin_ws/src/chairbot_neato_node/chairbot_neato_node/bags/straight_forward.bag" ) as straight_forward:
 	    straight_forward.play()
 
-    # CIRCLE
+    # CIRCLE == Indirect Forwards
     def optionc(self):  
-        SPEED=200
-        self._robot.setMotors(-100,-100,SPEED/2)
-        rospy.sleep(1)
-        self._robot.setMotors(200,200,SPEED*(1.5))
-        rospy.sleep(1)
+	 with BagPlayer("/home/charismapi01/catkin_ws/src/chairbot_neato_node/chairbot_neato_node/bags/indirect_forward.bag" ) as indirect_forward:
+	    indirect_forward.play()
 
-    # X
+    # X == Straight Backwards
     def optiond(self):  
-        SPEED=200
-        for _ in range(2):
-            self._robot.setMotors(-100,-100,SPEED)
-            rospy.sleep(1)
-            self._robot.setMotors(100,100,SPEED)
-            rospy.sleep(1)
+	with BagPlayer("/home/charismapi01/catkin_ws/src/chairbot_neato_node/chairbot_neato_node/bags/straight_back.bag" ) as straight_back:
+	    straight_back.play()
 
     def fwdFast(self):
         SPEED=175
