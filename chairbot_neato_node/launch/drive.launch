@@ -8,7 +8,7 @@
     <param name="neato_port" value="/dev/neato" />
   </node>
 
-  <node name="$(arg user)_drive" pkg="chairbot_neato_node" type="just_drive.py">
+  <node name="$(arg user)_drive" pkg="chairbot_neato_node" type="just_drive.py" output="screen">
     <param name="neato_port" value="/dev/neato" />
   </node>
 
