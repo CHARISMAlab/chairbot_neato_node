@@ -1,0 +1,12 @@
+<launch>
+	<param name="use_sim_time" value="false"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="laser_frame" args="0 0 0 0 0 0 world map 50"/>
+
+  <arg name="user" default="$(env USER)"/>
+
+  <node name="$(arg user)_drive" pkg="chairbot_neato_node" type="just_drive.py">
+    <param name="neato_port" value="/dev/neato" />
+  </node>
+
+</launch>
