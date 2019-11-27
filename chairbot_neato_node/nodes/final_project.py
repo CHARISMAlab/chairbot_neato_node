@@ -225,6 +225,8 @@ class NeatoNode:
         current_angle = self.orient
 
         ang_error =  self.goal_angle-current_angle
+        if abs(ang_error - 2*pi) <= 0.15:
+            ang_error = 0
         pos_error = sqrt((self.goal_x-self.pose_x)*(self.goal_x-self.pose_x) +  (self.goal_y-self.pose_y)*(self.goal_y-self.pose_y))
 
         ### CHECK IF TOO CLOSE TO OTHER NEATOS ###
