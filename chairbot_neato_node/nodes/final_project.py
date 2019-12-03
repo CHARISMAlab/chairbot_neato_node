@@ -27,7 +27,7 @@ class NeatoNode:
         rospy.loginfo("Using port: %s"%(self._port))
         self._robot = Botvac(self._port)
 
-
+        self.incl = True
         self.radius = 0.8
         self.num_neatos = 3
         self.stop_dist = 0.4
@@ -59,7 +59,7 @@ class NeatoNode:
         self.person_dist_me = 10
 
         # Include or exclude
-        rospy.Subscriber("/inclusion", String, self.incl_handler, queue_size=10)
+        # rospy.Subscriber("/inclusion", String, self.incl_handler, queue_size=10)
 
         # Formation center
         rospy.Subscriber("/neato05/pose", PoseStamped, self.goal_handler, queue_size=10)
@@ -67,25 +67,25 @@ class NeatoNode:
         # Neatos
 
         if chairbot_number=='01':
-            self.i_am = 1
+            # self.i_am = 1
             rospy.Subscriber("/neato01/pose", PoseStamped, self.pose_handler, queue_size=10)
             rospy.Subscriber("/neato02/pose", PoseStamped, self.pose_handlera, queue_size=10)
             rospy.Subscriber("/neato03/pose", PoseStamped, self.pose_handlerb, queue_size=10)
             rospy.Subscriber("/neato04/pose", PoseStamped, self.pose_handlerc, queue_size=10)
         if chairbot_number=='02':
-            self.i_am = 2
+            # self.i_am = 2
             rospy.Subscriber("/neato02/pose", PoseStamped, self.pose_handler, queue_size=10)
             rospy.Subscriber("/neato01/pose", PoseStamped, self.pose_handlera, queue_size=10)
             rospy.Subscriber("/neato03/pose", PoseStamped, self.pose_handlerb, queue_size=10)
             rospy.Subscriber("/neato04/pose", PoseStamped, self.pose_handlerc, queue_size=10)
         if chairbot_number=='03':
-            self.i_am = 3
+            # self.i_am = 3
             rospy.Subscriber("/neato03/pose", PoseStamped, self.pose_handler, queue_size=10)
             rospy.Subscriber("/neato01/pose", PoseStamped, self.pose_handlera, queue_size=10)
             rospy.Subscriber("/neato02/pose", PoseStamped, self.pose_handlerb, queue_size=10)
             rospy.Subscriber("/neato04/pose", PoseStamped, self.pose_handlerc, queue_size=10)
         if chairbot_number=='04':
-            self.i_am = 4
+            # self.i_am = 4
             rospy.Subscriber("/neato04/pose", PoseStamped, self.pose_handler, queue_size=10)
             rospy.Subscriber("/neato01/pose", PoseStamped, self.pose_handlera, queue_size=10)
             rospy.Subscriber("/neato02/pose", PoseStamped, self.pose_handlerb, queue_size=10)
@@ -94,7 +94,7 @@ class NeatoNode:
         # Person
         rospy.Subscriber("/neato06/pose", PoseStamped, self.person_handler, queue_size=10)
 
-
+        self.i_am = 1
 
 
     def fwd(self):
@@ -123,11 +123,11 @@ class NeatoNode:
         rospy.sleep(1)
         self._robot.setMotors(00,00,SPEED)
 
-    def incl_handler(self,data):
-        if data == 'true':
-            self.incl = True
-        else:
-            self.incl = False
+    # def incl_handler(self,data):
+    #     if data == 'true':
+    #         self.incl = True
+    #     else:
+    #         self.incl = False
 
     # Get goal
     def goal_handler(self,data):
@@ -211,7 +211,7 @@ class NeatoNode:
 
         self.goal_angle = atan2(self.goal_y-self.pose_y,self.goal_x-self.pose_x)
 
-        self._pub.publish("goal01: "+ str(self.goal_x) +","+ str(self.goal_y))
+        # self._pub.publish("goal01: "+ str(neato*self.ang_increment))
 
     def get_intermediate_goal(self):
 
@@ -225,7 +225,7 @@ class NeatoNode:
         current_angle = self.orient
 
         ang_error =  self.goal_angle-current_angle
-        if abs(ang_error - 2*pi) <= 0.15:
+        if abs(ang_error - 2*3.1415) <= 0.15:
             ang_error = 0
         pos_error = sqrt((self.goal_x-self.pose_x)*(self.goal_x-self.pose_x) +  (self.goal_y-self.pose_y)*(self.goal_y-self.pose_y))
 
@@ -246,7 +246,7 @@ class NeatoNode:
             if abs(ang_error) <=0.2:
                 if pos_error > 0.5*self.stop_dist:
                     self.fwd()
-                    self._pub.publish("pose01 error: " +str(pos_error))
+                    # self._pub.publish("pose01 error: " +str(pos_error))
                 else:
                     self.stop()
         else:
@@ -262,6 +262,8 @@ class NeatoNode:
         # else:
         #     neato = 0
 
+        incl = 0
+
         if self.i_am == 1:
             neato = 1
         elif self.i_am == 3:
@@ -271,13 +273,14 @@ class NeatoNode:
 
         if person_dist01 < person_dist04 or person_dist01 < person_dist03:
             if person_dist04 < person_dist03:
+                self._pub.publish("between 4 and 1" + str(incl))
                 # 01 or 04 move
                 # person between 0 and 120
                 # if person_dist01 < person_dist04:
                 #     # closer to 01 so i move to 180, which is orig angle +ang_inc/2
                 #     # robot03 (at 240) will move to 270, which is orig angle +ang_inc/4
                 #     # robot04 (at 360) is still
-                if incl:
+                if incl == 1:
                     if self.i_am == 1:
                         self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/2) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/2) + self.center_y
@@ -285,7 +288,9 @@ class NeatoNode:
                         self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/4) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/4) + self.center_y
                     if self.i_am == 4:
-                        pass
+                        self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                        self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
                 else:
                     if self.i_am == 1:
                         self.goal_x = self.radius*cos(neato*self.ang_increment - self.ang_increment/3) + self.center_x
@@ -294,22 +299,28 @@ class NeatoNode:
                         self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/3) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/3) + self.center_y
                     if self.i_am == 3:
-                        pass
+                        self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                        self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
 
 
             elif person_dist03 < person_dist04:
+                self._pub.publish("between 3 and 1"+ str(incl))
                 # 01 or 03 move
                 # person between 120 and 240
                 # if person_dist01 < person_dist03:
                 #     # closer to 01 (at 120) move to 60
                 #     # robot04 (at 0/360) will move to 330
                 #     # robot03 is still
-                if incl:
+                if incl == 1:
                     if self.i_am == 1:
                         self.goal_x = self.radius*cos(neato*self.ang_increment - self.ang_increment/2) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment - self.ang_increment/2) + self.center_y
+                        self._pub.publish(str(neato*self.ang_increment - self.ang_increment/2))
                     if self.i_am == 3:
-                        pass
+                        self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                        self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
                     if self.i_am == 4:
                         self.goal_x = self.radius*cos(neato*self.ang_increment - self.ang_increment/4) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment - self.ang_increment/4) + self.center_y
@@ -321,19 +332,24 @@ class NeatoNode:
                         self.goal_x = self.radius*cos(neato*self.ang_increment - self.ang_increment/3) + self.center_x
                         self.goal_y = self.radius*sin(neato*self.ang_increment - self.ang_increment/3) + self.center_y
                     if self.i_am ==4:
-                        pass
+                        self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                        self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
         else:
             # between 240 and 360
             # if person_dist04 < person_dist03:
                 #closer ro 04 so 04 moves to 60
                 # robot01 moves to 150
                 # robot03 is still
-            if incl:
+            self._pub.publish("between 4 and 3"+ str(incl))
+            if incl == 1:
                 if self.i_am == 1:
                     self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/4) + self.center_x
                     self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/4) + self.center_y
                 if self.i_am == 3:
-                    pass
+                    self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                    self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
                 if self.i_am == 4:
                     self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/2) + self.center_x
                     self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/2) + self.center_y
@@ -345,7 +361,9 @@ class NeatoNode:
                     self.goal_x = self.radius*cos(neato*self.ang_increment + self.ang_increment/3) + self.center_x
                     self.goal_y = self.radius*sin(neato*self.ang_increment + self.ang_increment/3) + self.center_y
                 if self.i_am == 1:
-                    pass
+                    self.goal_x = self.radius*cos(neato*self.ang_increment) + self.center_x
+                    self.goal_y = self.radius*sin(neato*self.ang_increment) + self.center_y
+
 
 
 
